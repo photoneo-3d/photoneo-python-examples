@@ -121,7 +121,7 @@ When `Color` is selected as `TextureSource` on an appropriate device, the
 `Intensity` component contains the color texture. The data is still transferred
 using `Mono16` as pixel format, however it uses a custom YCoCg encoding which
 encodes the color data in the lowest bits of the intensity. See
-[`common/YCoCg.h`](https://github.com/photoneo-3d/photoneo-cpp-examples/tree/main/GigEVision/aravis/common/YCoCg.h)
+[`common/YCoCg.h`](https://github.com/photoneo-3d/photoneo-cpp-examples/blob/main/GigEV/aravis/common/YCoCg.h)
 in C++ examples for more details on the encoding and an example implementation.
 
 ### Range
