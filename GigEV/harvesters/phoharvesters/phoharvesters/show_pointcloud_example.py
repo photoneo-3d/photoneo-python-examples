@@ -54,6 +54,11 @@ def main(device_sn: str):
         with h.create({"serial_number": device_sn}, config=CONNECTION_SETTINGS) as ia:
             features: NodeMap = ia.remote_device.node_map
 
+            # Set CameraSpace before fetching reprojection map
+            if features.has_node("CameraSpace"):
+                features.CameraSpace.value = "PrimaryCamera"  # Or ColorCamera
+                console.print(f"[yellow]CameraSpace: {features.CameraSpace.value}")
+
             reprojection_map: np.ndarray = get_reprojection_map(features, ia)
 
             features.TriggerSelector.value = "FrameStart"

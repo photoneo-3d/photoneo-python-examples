@@ -11,7 +11,10 @@ CONNECTION_SETTINGS: ParameterSet = ParameterSet(
     }
 )
 
-GENTL_PATHS = os.getenv("GENICAM_GENTL64_PATH", default=".").split(os.pathsep)
+module_dir = Path(__file__).resolve().parent
+GENTL_PATHS = os.getenv("GENICAM_GENTL64_PATH", default=str(module_dir)).split(
+    os.pathsep
+)
 
 GenTL_file = "libmvGenTLProducer.so"
 if platform == "win32":
