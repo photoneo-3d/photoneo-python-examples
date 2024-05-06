@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import struct
 import sys
 from pathlib import Path
@@ -5,46 +6,41 @@ from pathlib import Path
 from genicam.genapi import NodeMap
 from harvesters.core import Harvester
 
-from common import cti_file_path
+from gentl_producer_loader import producer_path
 
 
 def main(device_sn: str):
     with Harvester() as h:
-        print("Load .cti file...")
-        h.add_file(str(cti_file_path), check_existence=True, check_validity=True)
+        h.add_file(str(producer_path), check_existence=True, check_validity=True)
         h.update()
 
         print(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
             features: NodeMap = ia.remote_device.node_map
 
-            print("Setting software trigger mode")
-            # accessing features directly
+            # Restore default settings.
+            features.UserSetSelector.value = "Default"
+            features.UserSetLoad.execute()
+
+            # Enable software trigger.
             features.TriggerSelector.value = "FrameStart"
             features.TriggerMode.value = "On"
             features.TriggerSource.value = "Software"
 
             if features.IsMotionCam3D_Val.value:
-                print("Setting 2D mode")
-                # accessing features through string names
-                old_mode = features.get_node("OperationMode").value
+                # Accessing features through string values
                 features.get_node("OperationMode").value = "Mode_2D"
+                print(f"Operation mode: {features.OperationMode.value}")
 
-            # accessing features directly
+            # Accessing features directly by their name
             print(f"Width: {features.Width.value}")
             print(f"Height: {features.Height.value}")
-            print(f"TriggerSelector: {features.TriggerSelector.value}")
-            print(f"TriggerMode: {features.TriggerMode.value}")
-            print(f"TriggerSource: {features.TriggerSource.value}")
-
-            if features.IsMotionCam3D_Val.value:
-                print(f"OperationMode: {features.OperationMode.value}")
-
-            print("Reverting...")
-            features.TriggerSelector.value = "FrameStart"
-            features.TriggerMode.value = "Off"
-            if features.IsMotionCam3D_Val.value:
-                features.OperationMode.value = old_mode
+            print(f"CalibrationVolumeOnly: {features.CalibrationVolumeOnly.value}")
+            print(f"ExposureTime: {features.ExposureTime.value}")
+            print(f"ShutterMultiplier: {features.ShutterMultiplier.value}")
+            print(f"NormalsEstimationRadius: {features.NormalsEstimationRadius.value}")
+            print(f"LEDPower: {features.LEDPower.value}")
+            print(f"LaserPower: {features.LaserPower.value}")
 
             # This is a "raw" memory register, that contains a number of little endian doubles
             # (containing the opencv camera calibration parameters.)
@@ -55,13 +51,13 @@ def main(device_sn: str):
             print(f"CameraMatrix: {camera_matrix}")
 
             # accessing features through string names
-            features_to_print = [
-                "TriggerSelector",
-                "TriggerMode",
-                "TriggerSource"
-            ]
+            features_to_print = ["TriggerSelector", "TriggerMode", "TriggerSource"]
             for feature in features_to_print:
                 print(f"{feature}: {features.get_node(feature).value}")
+
+            # Loading default user set to restore changes
+            features.UserSetSelector.value = "Default"
+            features.UserSetLoad.execute()
 
     print("Finished")
 
@@ -71,8 +67,6 @@ if __name__ == "__main__":
         device_id = sys.argv[1]
         main(device_id)
     except IndexError:
-        print(
-            f"Error: no device given, please run it with the device serial number as argument:"
-        )
+        print("Error: no device given, please run it with the device serial number as argument:")
         print(f"{Path(__file__).name} <device serial>")
         sys.exit(1)

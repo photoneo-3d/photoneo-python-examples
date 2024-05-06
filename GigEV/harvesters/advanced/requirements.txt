@@ -3,3 +3,6 @@ open3d
 numpy
 opencv-python
 rich
+glfw
+colour
+numba
