@@ -14,7 +14,8 @@ Create a virtual environment and install the dependencies:
 
 ```
 python3.9 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate # on Linux
+# On windows: source .venv/Scripts/activate
 python3 -m pip install --upgrade pip
 pip install -r ./basic/requirements.txt # or folder advanced
 ```
@@ -32,6 +33,7 @@ To use Harvesters, you need a compatible GenTL producer. A list of GenTL produce
 2. The installer sets the `GENICAM_GENTL64_PATH` environment variable to `C:\Program Files\Balluff\ImpactAcquire\bin\x64\` by default.
 3. Make sure the `mvGenTLProducer.cti` file is accessible, as it is essential for proper functioning.
 4. On Windows, it's important to disable the `GigE Vision NDIS 6.x Filter Driver`.
+5. Setup firewall rules to allow unsolicited incoming UDP traffic from the device IP address.
 
 ![Disable Capture Driver on Windows](./gigev_capture_driver_disable.png?raw=true)
 
