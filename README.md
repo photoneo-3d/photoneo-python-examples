@@ -1,5 +1,5 @@
 # Photoneo Python examples
-![image](https://photoneo.com/files/dw/dw/github/Personal_Linkedin_banner_v3.png)
+![image](https://photoneo.com/files/dw/dw/github/Personal_Linkedin_banner_v4.png)
 
 ## Introduction
 This repository provides the building blocks necessary for developing your custom Python application for working with [Photoneo](https://www.photoneo.com/) devices. 
