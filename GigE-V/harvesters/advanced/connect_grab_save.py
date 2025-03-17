@@ -12,7 +12,7 @@ from photoneo_genicam.components import (enable_components, enabled_components,
 from photoneo_genicam.default_gentl_producer import producer_path
 from photoneo_genicam.features import enable_software_trigger
 from photoneo_genicam.user_set import load_default_user_set
-from photoneo_genicam.utils import write_raw_array
+from photoneo_genicam.utils import data_stream_reset, logger, write_raw_array
 
 
 def process_component(component_name: str, component: Component2DImage):
@@ -20,13 +20,19 @@ def process_component(component_name: str, component: Component2DImage):
     if component_name in ("Intensity", "ColorCamera"):
         component_data = component.data.copy()
         if pixel_format == "Mono10":
-            data = ((component_data.astype(np.uint16) << 6).reshape(component.height, component.width, 1))
+            data = (component_data.astype(np.uint16) << 6).reshape(
+                component.height, component.width, 1
+            )
         elif pixel_format == "Mono12":
-            data = ((component_data.astype(np.uint16) << 4).reshape(component.height, component.width, 1))
+            data = (component_data.astype(np.uint16) << 4).reshape(
+                component.height, component.width, 1
+            )
         elif pixel_format == "Mono16":
             data = component.data.reshape(component.height, component.width, 1)
         elif pixel_format == "RGB8":
-            data = cv2.cvtColor(component.data.reshape((component.height, component.width, 3)), cv2.COLOR_RGB2BGR)
+            data = cv2.cvtColor(
+                component.data.reshape((component.height, component.width, 3)), cv2.COLOR_RGB2BGR
+            )
         else:
             raise Exception(f"Unknown pixel format option for component: {component_name}")
         cv2.imwrite(f"{component_name}_{pixel_format}.png", data)
@@ -40,32 +46,33 @@ def process_component(component_name: str, component: Component2DImage):
 def main(device_sn: str, *components: str):
 
     if len(components) == 0:
-        print("Warning: No component specified, using default: Range.")
+        logger.warning("No component specified, using default: Range.")
         components = ["Range"]
 
     with Harvester() as h:
         h.add_file(str(producer_path), check_existence=True, check_validity=True)
         h.update()
 
-        print(f"Connecting to: {device_sn}")
+        logger.info(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
             features: NodeMap = ia.remote_device.node_map
+            logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
 
             load_default_user_set(features)
             enable_software_trigger(features)
 
-            print(f"Requested component(s): {components}")
+            logger.info(f"Requested component(s): {components}")
             enable_components(features, list(components))
             print(get_component_statuses(features, include_pixel_format=True))
 
+            data_stream_reset(ia)
             ia.start()
             features.TriggerSoftware.execute()
             enabled_comps: list = enabled_components(features)
             with ia.fetch(timeout=10) as buff:
                 # match the components based on their order
                 for component_name, part in zip(enabled_comps, buff.payload.components):
-                    print(f"Saving component {component_name}")
-                    print(f"  Data: {part}\n")
+                    logger.info(f"Saving component: {component_name}")
                     process_component(component_name, part)
 
 

@@ -7,6 +7,7 @@ from harvesters.core import Harvester
 
 from photoneo_genicam.default_gentl_producer import producer_path
 from photoneo_genicam.user_set import load_default_user_set
+from photoneo_genicam.utils import logger
 
 
 def pretty_print_user_set_options(features: NodeMap):
@@ -21,7 +22,7 @@ def pretty_print_user_set_options(features: NodeMap):
     def is_enum(setting_name):
         return isinstance(features.get_node(setting_name), IEnumeration)
 
-    print(f"Available user set settings: ")
+    logger.info(f"Available user set settings: ")
     for setting in features.UserSetFeatureSelector.symbolics:
         if node_exists(setting) and is_enum(setting):
             opts = features.get_node(setting).symbolics
@@ -35,9 +36,11 @@ def main(device_sn: str):
         h.add_file(str(producer_path), check_existence=True, check_validity=True)
         h.update()
 
+        logger.info(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
             features: NodeMap = ia.remote_device.node_map
             load_default_user_set(features)
+            logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
 
             settings_map = {
                 "CalibrationVolumeOnly": False,
@@ -48,38 +51,33 @@ def main(device_sn: str):
                 "NormalsEstimationRadius": 2,
             }
 
-            print(f"Available user sets: {features.UserSetSelector.symbolics}")
+            logger.info(f"Available user sets: {features.UserSetSelector.symbolics}")
 
-            print("Changing some settings:")
+            logger.info("Changing some settings:")
             for s, v in settings_map.items():
                 print(f"  {s}: {features.get_node(s).value} -> {v}")
                 features.get_node(s).value = v
 
-            print()
-            print(f"Store these changes into UserSet1")
+            logger.info(f"Store these changes into UserSet1")
             features.UserSetSelector.value = "UserSet1"
             features.UserSetSave.execute()
-            print(f"OK")
+            logger.info(f"OK")
 
-            print()
-            print(f"Load Default profile to restore default setting values")
+            logger.info(f"Load Default profile to restore default setting values")
             features.UserSetSelector.value = "Default"
             features.UserSetLoad.execute()
-            print(f"OK")
+            logger.info(f"OK")
 
-            print()
-            print(f"Restored settings:")
+            logger.info(f"Restored settings:")
             for s, v in settings_map.items():
                 print(f"  {s}: {features.get_node(s).value}")
 
-            print()
-            print("Load UserSet1")
+            logger.info("Load UserSet1")
             features.UserSetSelector.value = "UserSet1"
             features.UserSetLoad.execute()
-            print(f"OK")
+            logger.info(f"OK")
 
-            print()
-            print(f"Current settings (from UserSet1):")
+            logger.info(f"Current settings (from UserSet1):")
             for s, v in settings_map.items():
                 print(f"  {s}: {features.get_node(s).value}")
 

@@ -5,8 +5,9 @@ from harvesters.core import Component2DImage, ImageAcquirer
 
 from .components import enable_components
 from .features import enable_software_trigger
-from .user_set import load_default_user_set
-from .utils import measure_time
+from .utils import measure_time, setup_logger
+
+logger = setup_logger()
 
 
 def calculate_point_cloud_from_projc(depth_map: np.ndarray, coordinate_map: np.ndarray) -> np.array:

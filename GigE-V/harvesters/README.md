@@ -5,7 +5,6 @@ We provide 2 sets of examples to cover specific use cases.
 ## Basic examples
 The `basic` folder contains examples that show simple usage of the harvesters API with Photoneo devices without any additional dependencies.
 
-
 ## Advanced examples
 The `advanced` folder contains more elaborate examples with visualization.
 
@@ -13,7 +12,7 @@ The `advanced` folder contains more elaborate examples with visualization.
 Create a virtual environment and install the dependencies:
 
 ```
-python3.9 -m venv .venv
+python3.11 -m venv .venv
 source .venv/bin/activate # on Linux
 # On windows: source .venv/Scripts/activate
 python3 -m pip install --upgrade pip
@@ -26,6 +25,17 @@ To use Harvesters, you need a compatible GenTL producer. A list of GenTL produce
 **Recommended Producer:** We recommend using the `MATRIX VISION ImpactAcquire` GenTL producer. The version currently tested is `2.49.0`, which can be downloaded from [here](https://static.matrix-vision.com/mvIMPACT_Acquire/2.49.0/).
 
 **Environment Variable:** Regardless of whether you are using Windows or Linux, you need to set the `GENICAM_GENTL64_PATH` environment variable correctly.
+
+### Troubleshooting
+
+If you followed all the steps in this README but still encounter a `TimeoutException`, explicitly enabling the `PacketResend` functionality could help:
+
+Add this line after connecting to the device:
+```python
+ia.data_streams[0].node_map.mvResendActive.value = True
+```
+
+This is a specific setting for `mvGenTLProducer` and may change in the future.
 
 ### Windows Installation
 

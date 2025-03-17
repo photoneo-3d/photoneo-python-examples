@@ -8,6 +8,7 @@ from genicam.genapi import NodeMap
 from harvesters.core import Component2DImage, Harvester
 
 from gentl_producer_loader import producer_path
+from utils import data_stream_reset, logger
 
 
 def write_raw_array(filename: str, array):
@@ -21,9 +22,10 @@ def main(device_sn: str):
         h.add_file(str(producer_path), check_existence=True, check_validity=True)
         h.update()
 
-        print(f"Connecting to: {device_sn}")
+        logger.info(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
             features: NodeMap = ia.remote_device.node_map
+            logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
 
             # Restore default settings.
             features.UserSetSelector.value = "Default"
@@ -37,6 +39,7 @@ def main(device_sn: str):
             features.TriggerMode.value = "On"
             features.TriggerSource.value = "Software"
 
+            data_stream_reset(ia)
             ia.start()
             features.TriggerSoftware.execute()
             with ia.fetch(timeout=10) as buffer:
@@ -55,8 +58,10 @@ def main(device_sn: str):
                         f"Raw data: {component.data}\n"
                     )
                     raw_data_name = f"{i}.dat"
-                    print(f"Saving raw data to: {raw_data_name}")
-                    write_raw_array(raw_data_name, component.data.copy())
+
+                    # Optional: Save some of the data
+                    # print(f"Saving raw data to: {raw_data_name}")
+                    # write_raw_array(raw_data_name, component.data.copy())
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ from genicam.genapi import NodeMap
 from harvesters.core import Harvester
 
 from gentl_producer_loader import producer_path
+from utils import data_stream_reset, logger
 
 FRAME_COUNT = 50
 
@@ -15,17 +16,19 @@ def main(device_sn: str):
         h.add_file(str(producer_path), check_existence=True, check_validity=True)
         h.update()
 
-        print(f"Connecting to: {device_sn}")
+        logger.info(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
             features: NodeMap = ia.remote_device.node_map
+            logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
 
             # Load the Default user set to restore default settings
             # (which include continuous acquisition mode).
             features.UserSetSelector.value = "Default"
             features.UserSetLoad.execute()
 
+            data_stream_reset(ia)
             ia.start()
-            print(f"Acquiring {FRAME_COUNT} frames.")
+            logger.info(f"Acquiring {FRAME_COUNT} frames.")
             frame_counter = 0
             fps_accumulated = 0.0
             while frame_counter != FRAME_COUNT:

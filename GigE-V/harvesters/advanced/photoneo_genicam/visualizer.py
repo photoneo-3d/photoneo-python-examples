@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import List
 
 import cv2
@@ -7,10 +8,10 @@ import open3d as o3d
 from harvesters.core import Component2DImage
 from open3d.visualization import VisualizerWithKeyCallback
 
+from .utils import logger
 
-def render_static(
-    objects: List, axes_size=70, width=1000, height=800, top=300, left=300
-):
+
+def render_static(objects: List, axes_size=70, width=1000, height=800, top=300, left=300):
     """
     Render a static Open3D geometry with axes.
     """
@@ -64,11 +65,11 @@ class TextureImage:
         cv2.imshow(self.name, self.processed_image)
 
     def print_info(self):
-        print(f"Resolution:{self.image.width}x{self.image.height}")
-        print(f"ImagePixelFormat:{self.image.data_format}")
-        print(f"Components per pixel:{self.image.num_components_per_pixel}")
-        print(f"Min:{self.image.data.min()}")
-        print(f"Max:{self.image.data.max()}")
+        logger.info(f"Resolution:{self.image.width}x{self.image.height}")
+        logger.info(f"ImagePixelFormat:{self.image.data_format}")
+        logger.info(f"Components per pixel:{self.image.num_components_per_pixel}")
+        logger.info(f"Min:{self.image.data.min()}")
+        logger.info(f"Max:{self.image.data.max()}")
 
 
 class RealTimePCLRenderer:
@@ -80,7 +81,44 @@ class RealTimePCLRenderer:
         self.render_opts.background_color = np.asarray([0.9, 0.9, 0.9])
         self.vis.register_key_action_callback(glfw.KEY_ESCAPE, self.key_action_callback)
         self.should_close = False
-        print("Window created - OK")
 
     def key_action_callback(self, vis, key, action):
         self.should_close = True
+
+
+@dataclass
+class OfflineRenderParams:
+    background_color: tuple = (1, 1, 1, 1)
+    shader: str = "defaultUnlit"
+    point_size: float = 2.0
+    up_vector: tuple = (0, -1, 0)
+    fov: float = 50
+    distance_from_camera: float = 0.60
+    width: int = 1920
+    height: int = 1080
+
+
+def pcl_offline_render(pcl, filename: str, params=OfflineRenderParams()):
+    """
+    Renders a point cloud offline and saves it as an image.
+
+    Args:
+        pcl (o3d.geometry.PointCloud): The input point cloud.
+        filename (str): The output image filename.
+        params (OfflineRenderParams, optional): Rendering parameters. Defaults to OfflineRenderParams().
+    """
+    renderer = o3d.visualization.rendering.OffscreenRenderer(params.width, params.height)
+    renderer.scene.set_background(params.background_color)
+
+    mat = o3d.visualization.rendering.MaterialRecord()
+    mat.shader, mat.point_size = params.shader, params.point_size
+
+    renderer.scene.add_geometry("pcl", pcl, mat)
+
+    bounds = pcl.get_axis_aligned_bounding_box()
+    center, extent = bounds.get_center(), np.linalg.norm(bounds.get_extent())
+    eye = center + [0, 0, -params.distance_from_camera * extent]
+
+    renderer.setup_camera(params.fov, center, eye, params.up_vector)
+    o3d.io.write_image(filename, renderer.render_to_image())
+    logger.debug(f"Saved image as {filename}")

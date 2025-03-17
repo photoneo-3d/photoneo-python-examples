@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import sys
 from pathlib import Path
 
@@ -7,12 +8,17 @@ import open3d as o3d
 from genicam.genapi import NodeMap
 from harvesters.core import Component2DImage, Harvester
 
-from photoneo_genicam.components import enable_components, enabled_components
+from photoneo_genicam.components import enable_components
 from photoneo_genicam.default_gentl_producer import producer_path
-from photoneo_genicam.pointcloud import (calculate_point_cloud_from_projc, create_3d_vector,
+from photoneo_genicam.pointcloud import (calculate_point_cloud_from_projc,
+                                         create_3d_vector,
                                          pre_fetch_coordinate_maps)
 from photoneo_genicam.user_set import load_default_user_set
+from photoneo_genicam.utils import data_stream_reset, logger
 from photoneo_genicam.visualizer import RealTimePCLRenderer
+
+# For Ubuntu24 support with Wayland
+os.environ["XDG_SESSION_TYPE"] = "x11"
 
 
 def main(device_sn: str):
@@ -20,12 +26,14 @@ def main(device_sn: str):
         h.add_file(str(producer_path), check_existence=True, check_validity=True)
         h.update()
 
+        logger.info(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
             features: NodeMap = ia.remote_device.node_map
+            logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
 
             load_default_user_set(features)
 
-            print("Pre-fetch CoordinateMaps")
+            logger.info("Pre-fetch CoordinateMaps")
             coordinate_map: np.array = pre_fetch_coordinate_maps(ia)
 
             enable_components(features, ["Range"])
@@ -36,6 +44,7 @@ def main(device_sn: str):
             else:
                 features.TextureSource.value = "Laser"
 
+            data_stream_reset(ia)
             ia.start()
             frame_counter = 0
             total_fps = 0.0
@@ -62,7 +71,6 @@ def main(device_sn: str):
 
                     pcl_renderer.vis.poll_events()
                     pcl_renderer.vis.update_renderer()
-
                     print(f"Avg FPS: {round(total_fps / frame_counter, 2)}", end="\r")
 
             pcl_renderer.vis.destroy_window()

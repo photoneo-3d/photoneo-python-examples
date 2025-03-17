@@ -14,6 +14,8 @@ This example expects the [Balluf ImpactAcquire GenTL producer](http://static.mat
   - Example for visualizing point cloud, transformed into marker space.
 - [pointcloud_with_projectedC.py](pointcloud_with_projectedC.py):  
   - Example for visualizing point cloud in real time, which is calculated from ProjectedC component locally. Using continuous acquisition mode.
+- [pointcloud_with_projectedC_color.py](pointcloud_with_projectedC_color.py):  
+  - Example for visualizing point cloud, calculated from the ProjectedC component locally, with color texture mapped to the depth map.
 - [pointcloud_with_normals_and_texture.py](pointcloud_with_normals_and_texture.py):  
   - Example for visualizing point cloud data including normal maps and texture information.
 - [show_confidence_map.py](show_confidence_map.py):  
@@ -26,6 +28,10 @@ This example expects the [Balluf ImpactAcquire GenTL producer](http://static.mat
   - Script for YCoCg color conversion.
 - [hw_trigger.py](hw_trigger.py):  
   - Script to demonstrate hardware trigger mode.
+- [roi_mode.py](roi_mode.py):  
+  - Example for capturing two images—one with the original resolution and another with a predefined region of interest (ROI) on a color texture.
+- [ptp_timestamp.py](ptp_timestamp.py):  
+  - Example for triggering two devices simultaneously and printing the PTP status and timestamp. Devices must be on the same network.
 
 ## Run examples
 

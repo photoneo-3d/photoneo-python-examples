@@ -12,7 +12,11 @@ from photoneo_genicam.components import enable_components
 from photoneo_genicam.default_gentl_producer import producer_path
 from photoneo_genicam.features import enable_software_trigger
 from photoneo_genicam.user_set import load_default_user_set
-from photoneo_genicam.utils import measure_time
+from photoneo_genicam.utils import (data_stream_reset, logger, logging,
+                                    measure_time)
+
+numba_logger = logging.getLogger("numba")
+numba_logger.setLevel(logging.WARNING)
 
 
 @jit(nopython=True)
@@ -72,11 +76,13 @@ def main(device_sn: str):
         h.add_file(str(producer_path), check_existence=True, check_validity=True)
         h.update()
 
+        logger.info(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
             features: NodeMap = ia.remote_device.node_map
+            logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
 
             if not features.IsMotionCam3DColor_Val.value:
-                print("WARNING: This example is not supported on the current device type.")
+                logger.warning("WARNING: This example is not supported on the current device type.")
                 return
 
             load_default_user_set(features)
@@ -87,6 +93,7 @@ def main(device_sn: str):
             features.PixelFormat.value = "Mono16"
             features.Scan3dOutputMode.value = "ProjectedC"
 
+            data_stream_reset(ia)
             ia.start()
             features.TriggerSoftware.execute()
             with ia.fetch(timeout=10) as buffer:
@@ -95,11 +102,12 @@ def main(device_sn: str):
                     image_ycocg.height, image_ycocg.width
                 ).copy()
                 cv2.imshow("YCoCg", reshaped_ycocg)
+                logger.debug("Converting YCoCg to RGB...")
                 img = convert_to_rgb(reshaped_ycocg)
                 image_uint8 = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
                 cv2.imshow("YCoCg Converted", cv2.cvtColor(image_uint8, cv2.COLOR_RGB2BGR))
 
-            print("Press ESC to close all windows")
+            # logger.info("Press ESC to close all windows")
             while True:
                 key = cv2.waitKey(1) & 0xFF
                 if key == 27:

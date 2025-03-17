@@ -10,7 +10,9 @@ from harvesters.core import Component2DImage, Harvester
 
 from photoneo_genicam.components import enable_components
 from photoneo_genicam.default_gentl_producer import producer_path
+from photoneo_genicam.features import enable_software_trigger
 from photoneo_genicam.user_set import load_default_user_set
+from photoneo_genicam.utils import data_stream_reset, logger
 from photoneo_genicam.visualizer import TextureImage
 
 
@@ -95,7 +97,7 @@ def device_based_configs(features: NodeMap) -> List[TextureSourceConfig]:
     is_alpha: bool = features.IsAlphaScanner_Val.value
 
     if is_color:
-        print(f"Device type: MotionCam3DColor")
+        logger.info(f"Device type: MotionCam3DColor")
         return [
             intensity_rgb,
             intensity_mono10,
@@ -104,13 +106,13 @@ def device_based_configs(features: NodeMap) -> List[TextureSourceConfig]:
             intensity_rgb_camera_space,
         ]
     if is_scanner and not is_alpha:
-        print(f"Device type: PhoXi3DScanner")
+        logger.info(f"Device type: PhoXi3DScanner")
         return [scanner_default]
     if is_alpha and is_scanner:
-        print(f"Device type: AlphaScanner")
+        logger.info(f"Device type: AlphaScanner")
         return [alpha_default]
     if is_mc:
-        print(f"Device type: MotionCam3D")
+        logger.info(f"Device type: MotionCam3D")
         return [intensity_mono10]
     else:
         raise Exception("No config defined for current device type")
@@ -122,28 +124,34 @@ def main(device_sn: str):
         h.update()
 
         images = []
+        logger.info(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
             features = ia.remote_device.node_map
+            logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
+
             example_options: List[TextureSourceConfig] = device_based_configs(features)
             load_default_user_set(features)
+            enable_software_trigger(features)
 
             for setting_combination in example_options:
                 setting_combination.apply_settings(features)
 
+                data_stream_reset(ia)
                 ia.start()
+                features.TriggerSoftware.execute()
                 with ia.fetch(timeout=10) as buffer:
                     img: Component2DImage = buffer.payload.components[0]
                     images.append(TextureImage(f"{setting_combination.name}", image=img))
                 ia.stop()
 
         if len(images) == 0:
-            print("No images captured")
+            logger.error("No images captured")
             return
 
         for image in images:
             image.show()
 
-        print("Press ESC to close all windows")
+        logger.info("Press ESC to close all windows")
         while True:
             key = cv2.waitKey(1) & 0xFF
             if key == 27:

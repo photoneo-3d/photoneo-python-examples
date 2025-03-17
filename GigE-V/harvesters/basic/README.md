@@ -19,6 +19,8 @@ This example expects the [Balluf ImpactAcquire GenTL producer](http://static.mat
   - This script demonstrates how to read data in chunks.
 - [read_write_settings.py](read_write_settings.py):
   - This script provides an example of reading and writing settings for a device. It demonstrates different approaches to interact with the device.
+- [jumbo_frames_compatibility](jumbo_frames_compatibility.py):
+  - Example for printing information about network interfaces with MTU values and attempting to connect to a device to detect potential MTU misconfiguration issues.
 
 ## Run examples
 

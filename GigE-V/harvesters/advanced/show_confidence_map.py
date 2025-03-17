@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import sys
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from photoneo_genicam.components import enable_components
 from photoneo_genicam.default_gentl_producer import producer_path
 from photoneo_genicam.features import enable_software_trigger
 from photoneo_genicam.user_set import load_default_user_set
+from photoneo_genicam.utils import data_stream_reset, logger
 from photoneo_genicam.visualizer import process_for_visualisation
 
 
@@ -18,8 +20,10 @@ def main(device_sn: str):
         h.add_file(str(producer_path), check_existence=True, check_validity=True)
         h.update()
 
+        logger.info(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
             features: NodeMap = ia.remote_device.node_map
+            logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
 
             load_default_user_set(features)
             enable_software_trigger(features)
@@ -27,6 +31,7 @@ def main(device_sn: str):
             enable_components(features, ["Range", "Confidence"])
             features.Scan3dOutputMode.value = "ProjectedC"
 
+            data_stream_reset(ia)
             ia.start()
             features.TriggerSoftware.execute()
             with ia.fetch(timeout=10) as buffer:
@@ -44,9 +49,9 @@ def main(device_sn: str):
                     break
 
                 # Add a check for window closing event
-                if cv2.getWindowProperty('DepthMap', cv2.WND_PROP_VISIBLE) < 1:
+                if cv2.getWindowProperty("DepthMap", cv2.WND_PROP_VISIBLE) < 1:
                     break
-                if cv2.getWindowProperty('ConfidenceMap', cv2.WND_PROP_VISIBLE) < 1:
+                if cv2.getWindowProperty("ConfidenceMap", cv2.WND_PROP_VISIBLE) < 1:
                     break
 
             cv2.destroyAllWindows()
