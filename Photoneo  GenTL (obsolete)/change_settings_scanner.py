@@ -81,7 +81,7 @@ with Harvester() as h:
         # True or False
         ambient_light_suppression = features.AmbientLightSuppression.value
         features.AmbientLightSuppression.value = False
-        # `Normal` or `Interreflections`
+        # `Normal`, `Interreflections` or `HighFrequency`
         coding_strategy = features.CodingStrategy.value
         features.CodingStrategy.value = 'Normal'
         # `Fast`, `High` or `Ultra`
@@ -165,11 +165,20 @@ with Harvester() as h:
         # <0.0, 4095.0>
         signal_contrast_threshold = features.SignalContrastThreshold.value
         features.SignalContrastThreshold.value = 2000.50
+        # `Off`, `Medium` or `Strong`
+        pattern_code_correction = features.PatternCodeCorrection.value
+        features.PatternCodeCorrection.value = 'Medium'
+        # True or False
+        glare_compensation = features.GlareCompensation.value
+        features.GlareCompensation.value = True
+        # `Off` or `Medium`
+        hole_filling = features.HoleFilling.value
+        features.HoleFilling.value = 'Medium'
 
 
         ## Coordinates settings
-        # `CameraSpace`, `MarkerSpace`, `RobotSpace` or `CustomSpace`
-        camera_space = features.CoordinateSpace.value
+        # `CameraSpace`, `MarkerSpace`, `RobotSpace`, `CustomSpace` or `PrimaryCameraSpace`
+        coordinate_space = features.CoordinateSpace.value
         features.CoordinateSpace.value = 'MarkerSpace'
         # `Custom` or `Robot`
         transformation_space_selector = features.TransformationSpaceSelector.value
@@ -213,14 +222,89 @@ with Harvester() as h:
         robot_transformation_translation_vector_new_bytes = struct.pack('3d', *robot_transformation_translation_vector_new_values)
         features.RobotTransformationTranslationVector.set(robot_transformation_translation_vector_new_bytes)
         # True or False
-        recognize_markers = features.RecognizeMarkers
+        recognize_markers = features.RecognizeMarkers.value
         features.RecognizeMarkers.value = True
         # <-999999.0, 999999.0>
-        marker_scale_width = features.MarkerScaleWidth
+        marker_scale_width = features.MarkerScaleWidth.value
         features.MarkerScaleWidth.value = 0.50
         # <-999999.0, 999999.0>
-        marker_scale_height = features.MarkerScaleHeight
+        marker_scale_height = features.MarkerScaleHeight.value
         features.MarkerScaleHeight.value = 0.50
+        # True or False
+        save_transformations = features.SaveTransformations.value
+        features.SaveTransformations.value = True
+        # `PrimaryCamera` or `ColorCamera`
+        camera_space = features.CameraSpace.value
+        features.CameraSpace.value = 'PrimaryCamera'
+        # `Perspective`
+        currcam_projection_mode = features.CurrentCamera_ProjectionMode.value
+        features.CurrentCamera_ProjectionMode.value = 'Perspective'
+        # `Row0Col0`, `Row0Col1`, `Row0Col2`, `Row1Col0`, .. , `Row2Col2`
+        currcam_perspective_camera_matrix_selector = features.CurrentCamera_Perspective_CameraMatrixSelector.value
+        features.CurrentCamera_Perspective_CameraMatrixSelector.value = 'Row0Col1'
+        # ReadOnly
+        currcam_perspective_camera_matrix_value = features.CurrentCamera_Perspective_CameraMatrixValue.value
+        # Read as raw bytes array
+        currcam_perspective_camera_matrix_length = features.CurrentCamera_Perspective_CameraMatrix.length
+        currcam_perspective_camera_matrix_bytes = features.CurrentCamera_Perspective_CameraMatrix.get(currcam_perspective_camera_matrix_length)
+        currcam_perspective_camera_matrix = struct.unpack('9d', currcam_perspective_camera_matrix_bytes)
+        # <0, 11>
+        currcam_perspective_distortion_coefficient_selector = features.CurrentCamera_Perspective_DistortionCoefficientSelector.value
+        features.CurrentCamera_Perspective_DistortionCoefficientSelector.value = 3
+        # ReadOnly
+        currcam_perspective_distortion_coefficient_value = features.CurrentCamera_Perspective_DistortionCoefficientValue.value
+        # Read as raw bytes array
+        currcam_perspective_distortion_coefficient_length = features.CurrentCamera_Perspective_DistortionCoefficient.length
+        currcam_perspective_distortion_coefficient_bytes = features.CurrentCamera_Perspective_DistortionCoefficient.get(currcam_perspective_distortion_coefficient_length)
+        currcam_perspective_distortion_coefficient = struct.unpack('12d', currcam_perspective_distortion_coefficient_bytes)
+        # ReadOnly
+        currcam_orthogonal_settings_width_value = features.CurrentCamera_OrthogonalSettingsWidth.value
+        currcam_orthogonal_settings_height_value = features.CurrentCamera_OrthogonalSettingsHeight.value
+        # `Row0Col0`, `Row0Col1`, `Row0Col2`, `Row1Col0`, .. , `Row2Col2`
+        currcam_worldtocamera_rotation_matrix_selector = features.CurrentCamera_WorldToCamera_RotationMatrixSelector.value
+        features.CurrentCamera_WorldToCamera_RotationMatrixSelector.value = 'Row0Col1'
+        # <-999999.0, 999999.0>
+        currcam_worldtocamera_rotation_matrix_value = features.CurrentCamera_WorldToCamera_RotationMatrixValue.value
+        # Read as raw bytes array    
+        currcam_worldtocamera_rotation_matrix_length = features.CurrentCamera_WorldToCamera_RotationMatrix.length
+        currcam_worldtocamera_rotation_matrix_bytes = features.CurrentCamera_WorldToCamera_RotationMatrix.get(currcam_worldtocamera_rotation_matrix_length)
+        currcam_worldtocamera_rotation_matrix = struct.unpack('9d', currcam_worldtocamera_rotation_matrix_bytes)
+        # `X`, `Y` or `Z`
+        currcam_worldtocamera_translation_vector_selector = features.CurrentCamera_WorldToCamera_TranslationVectorSelector.value
+        features.CurrentCamera_WorldToCamera_TranslationVectorSelector.value = 'Z'
+        # <-999999.0, 999999.0>
+        currcam_worldtocamera_translation_vector_value = features.CurrentCamera_WorldToCamera_TranslationVectorValue.value
+        # Read as raw bytes array    
+        currcam_worldtocamera_translation_vector_length = features.CurrentCamera_WorldToCamera_TranslationVector.length
+        currcam_worldtocamera_translation_vector_bytes = features.CurrentCamera_WorldToCamera_TranslationVector.get(currcam_worldtocamera_translation_vector_length)
+        currcam_worldtocamera_translation_vector = struct.unpack('3d', currcam_worldtocamera_translation_vector_bytes)
+        # ReadOnly
+        currcam_resolution_width_value = features.CurrentCamera_ResolutionWidth.value
+        currcam_resolution_height_value = features.CurrentCamera_ResolutionHeight.value
+        # `Perspective`
+        features.CurrentPrimaryCamera_ProjectionMode.value = 'Perspective'
+        # Read as raw bytes array
+        currprimcam_perspective_camera_matrix_length = features.CurrentPrimaryCamera_Perspective_CameraMatrix.length
+        currprimcam_perspective_camera_matrix_bytes = features.CurrentPrimaryCamera_Perspective_CameraMatrix.get(currprimcam_perspective_camera_matrix_length)
+        currprimcam_perspective_camera_matrix = struct.unpack('9d', currprimcam_perspective_camera_matrix_bytes)
+        # Read as raw bytes array
+        currprimcam_perspective_distortion_coefficient_length = features.CurrentPrimaryCamera_Perspective_DistortionCoefficient.length
+        currprimcam_perspective_distortion_coefficient_bytes = features.CurrentPrimaryCamera_Perspective_DistortionCoefficient.get(currprimcam_perspective_distortion_coefficient_length)
+        currprimcam_perspective_distortion_coefficient = struct.unpack('12d', currprimcam_perspective_distortion_coefficient_bytes)
+        # ReadOnly
+        currprimcam_orthogonal_settings_width_value = features.CurrentPrimaryCamera_OrthogonalSettingsWidth.value
+        currprimcam_orthogonal_settings_height_value = features.CurrentPrimaryCamera_OrthogonalSettingsHeight.value
+        # Read as raw bytes array    
+        currprimcam_worldtocamera_rotation_matrix_length = features.CurrentPrimaryCamera_WorldToCamera_RotationMatrix.length
+        currprimcam_worldtocamera_rotation_matrix_bytes = features.CurrentPrimaryCamera_WorldToCamera_RotationMatrix.get(currprimcam_worldtocamera_rotation_matrix_length)
+        currprimcam_worldtocamera_rotation_matrix = struct.unpack('9d', currprimcam_worldtocamera_rotation_matrix_bytes)
+        # Read as raw bytes array    
+        currprimcam_worldtocamera_translation_vector_length = features.CurrentPrimaryCamera_WorldToCamera_TranslationVector.length
+        currprimcam_worldtocamera_translation_vector_bytes = features.CurrentPrimaryCamera_WorldToCamera_TranslationVector.get(currprimcam_worldtocamera_translation_vector_length)
+        currprimcam_worldtocamera_translation_vector = struct.unpack('3d', currprimcam_worldtocamera_translation_vector_bytes)
+        # ReadOnly
+        currprimcam_resolution_width_value = features.CurrentPrimaryCamera_ResolutionWidth.value
+        currprimcam_resolution_height_value = features.CurrentPrimaryCamera_ResolutionHeight.value
 
 
         ## Calibration settings

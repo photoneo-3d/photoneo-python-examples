@@ -52,7 +52,7 @@ def display_pointcloud_if_available(pointcloud_comp, normal_comp, texture_comp, 
         texture = texture_comp.data.reshape(texture_comp.height, texture_comp.width, 1).copy()
         texture_rgb[:, 0] = np.reshape(1/65536 * texture, -1)
         texture_rgb[:, 1] = np.reshape(1/65536 * texture, -1)
-        texture_rgb[:, 2] = np.reshape(1/65536 * texture, -1)        
+        texture_rgb[:, 2] = np.reshape(1/65536 * texture, -1)
     elif texture_rgb_comp.width > 0 and texture_rgb_comp.height > 0:
         texture = texture_rgb_comp.data.reshape(texture_rgb_comp.height, texture_rgb_comp.width, 3).copy()
         texture_rgb[:, 0] = np.reshape(1/65536 * texture[:, :, 0], -1)
@@ -75,8 +75,10 @@ def freerun():
 
     if platform == "win32":
         cti_file_path_suffix = "/API/bin/photoneo.cti"
+        save_last_scan_path_prefix = "C:/Users/Public"
     else:
         cti_file_path_suffix = "/API/lib/photoneo.cti"
+        save_last_scan_path_prefix = "~"
     cti_file_path = os.getenv('PHOXI_CONTROL_PATH') + cti_file_path_suffix
     print("--> cti_file_path: ", cti_file_path)
 
@@ -129,6 +131,36 @@ def freerun():
                 # do something with first frame
                 print(buffer)
 
+                """
+                # Save last scan to a specific file format.
+                # Supported file formats are:
+                # Text file (*.txt)
+                # Stanford's PLY (*.ply)
+                # Leica's PTX (*.ptx)
+                # Photoneo's Raw data format (*.praw)
+                # Raw images data format in tif (*.tif)
+
+                # 'SaveLastScanFilePath' - Path where the file should be saved.
+                #     Absolute path is preferred (e.g. C:/Users/Public/my.praw, /home/<user>/my.praw),
+                #     relative path points to PhoXiControl's path (folder must exist).
+                # 'SaveLastScanFrameId' - Save only if last scan has the same frame index.
+                # 'SaveLastScanJsonOptions' - (optional) Configure save operations with options. Format:
+                #     A simple list of options in json format where a key matches an option in GUI.
+                #     Key uses the same type as in GUI, e.g. boolean, int, string, ..
+                #     If the string key does not match the existing option, the option is ignored.
+
+                save_last_scan_path = save_last_scan_path_prefix + "/test.praw"
+                print("--> save_last_scan_path: ", save_last_scan_path)
+                features.SaveLastScanFilePath.value = save_last_scan_path
+
+                features.SaveLastScanFrameId.value= -1
+
+                json_options = '{"UseCompression": true}'
+                features.SaveLastScanJsonOptions.value = json_options
+
+                features.SaveLastScan.execute()
+                """
+
                 # The buffer object will automatically call its dto once it goes
                 # out of scope and releases internal buffer object.
 
@@ -139,7 +171,7 @@ def freerun():
 
                 texture_component = payload.components[0]
                 display_texture_if_available(texture_component)
-                
+
                 texture_rgb_component = payload.components[1]
                 display_color_image_if_available(texture_rgb_component, "TextureRGB")
                 color_image_component = payload.components[7]
