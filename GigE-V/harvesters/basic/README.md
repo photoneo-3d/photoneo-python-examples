@@ -21,6 +21,8 @@ This example expects the [Balluf ImpactAcquire GenTL producer](http://static.mat
   - This script provides an example of reading and writing settings for a device. It demonstrates different approaches to interact with the device.
 - [jumbo_frames_compatibility](jumbo_frames_compatibility.py):
   - Example for printing information about network interfaces with MTU values and attempting to connect to a device to detect potential MTU misconfiguration issues.
+- [toggle_jumbo_frames](toggle_jumbo_frames.py):
+  - Toggle JumboFrames (MTU 9000).
 
 ## Run examples
 
