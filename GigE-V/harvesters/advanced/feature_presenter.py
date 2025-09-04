@@ -1,17 +1,26 @@
 #!/usr/bin/env python3
 import sys
+import time
 from pathlib import Path
-from typing import List
 
+from genicam.genapi import NodeMap
 from harvesters.core import Component2DImage, Harvester
 
+from photoneo_genicam.camera_features import *
+from photoneo_genicam.components import enable_components
 from photoneo_genicam.default_gentl_producer import producer_path
-from photoneo_genicam.features import enable_software_trigger
-from photoneo_genicam.textures import TEXTURE_MAP_BY_DEVICE_TYPE, TextureOption
+from photoneo_genicam.features import Presenter, enable_software_trigger
 from photoneo_genicam.user_set import load_default_user_set
-from photoneo_genicam.utils import (DeviceType, data_stream_reset,
-                                    detect_device_type, logger)
+from photoneo_genicam.utils import data_stream_reset, logger
 from photoneo_genicam.visualizer import TextureImage
+
+
+FEATURES_TO_PRESENT = [
+    Presenter(None, [], [("TextureSource", "LED")]),
+    Presenter(ProjectionOffset, [150, 150], []),
+    Presenter(ISO, [300], [("TextureSource", "LED")]),
+    Presenter(HDR, ["Strong"], [("TextureSource", "LED"), ("ISO", "1600")]),
+]
 
 
 def main(device_sn: str):
@@ -22,38 +31,31 @@ def main(device_sn: str):
         images = []
         logger.info(f"Connecting to: {device_sn}")
         with h.create({"serial_number": device_sn}) as ia:
-            features = ia.remote_device.node_map
+            features: NodeMap = ia.remote_device.node_map
             logger.info(
                 f"Device Firmware version: {features.DeviceFirmwareVersion.value}"
             )
 
-            device_type: DeviceType = detect_device_type(features)
-            example_options: List[TextureOption] = TEXTURE_MAP_BY_DEVICE_TYPE[
-                device_type
-            ]
-            load_default_user_set(features)
-            enable_software_trigger(features)
+            for option in FEATURES_TO_PRESENT:
+                load_default_user_set(features)
+                enable_software_trigger(features)
+                enable_components(features, ["Intensity"])
 
-            for option in example_options:
-                option.apply(features)
-                logger.info(f"Applying texture option: {option.configuration_name}")
+                filename: str = option.apply(features)
+                if not filename:
+                    continue
 
                 data_stream_reset(ia)
                 ia.start()
                 features.TriggerSoftware.execute()
                 with ia.fetch(timeout=10) as buffer:
-                    img: Component2DImage = buffer.payload.components[0]
-                    images.append(
-                        TextureImage(f"{option.configuration_name}", image=img)
-                    )
+                    intensity_texture: Component2DImage = buffer.payload.components[0]
+                    images.append(TextureImage(f"{filename}", image=intensity_texture))
+                    time.sleep(1)
                 ia.stop()
 
-        if len(images) == 0:
-            logger.error("No images captured")
-            return
-
-        for image in images:
-            image.save()
+            for image in images:
+                image.save()
 
 
 if __name__ == "__main__":

@@ -32,7 +32,7 @@ def main(device_sn: str):
             features: NodeMap = ia.remote_device.node_map
             logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
 
-            if not features.IsMotionCam3D_Val.value:
+            if not (features.IsMotionCam3D_Val.value or features.IsPhoXi3DScannerGen3_Val):
                 logger.error("Example not suppored for current device type.")
                 return
 
@@ -44,7 +44,12 @@ def main(device_sn: str):
             coordinate_map: np.array = pre_fetch_coordinate_maps(ia)
 
             enable_components(features, ["Intensity", "Range"])
-            features.CameraTextureSource.value = "Color"
+
+            if features.IsPhoXi3DScannerGen3_Val.value:
+                features.TextureSource.value = "Color"
+            else:
+                features.CameraTextureSource.value = "Color"
+
             features.Scan3dOutputMode.value = "ProjectedC"
 
             data_stream_reset(ia)

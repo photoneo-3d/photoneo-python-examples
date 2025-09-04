@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List
 
 import cv2
@@ -11,7 +12,9 @@ from open3d.visualization import VisualizerWithKeyCallback
 from .utils import logger
 
 
-def render_static(objects: List, axes_size=70, width=1000, height=800, top=300, left=300):
+def render_static(
+    objects: List, axes_size=70, width=1000, height=800, top=300, left=300
+):
     """
     Render a static Open3D geometry with axes.
     """
@@ -45,7 +48,9 @@ def process_for_visualisation(image: Component2DImage):
         normalized_image = cv2.normalize(image_array, None, 0, 65535, cv2.NORM_MINMAX)
         return normalized_image.astype(np.uint16)
     if isRGB:
-        return cv2.cvtColor(image.data.reshape((image.height, image.width, 3)), cv2.COLOR_RGB2BGR)
+        return cv2.cvtColor(
+            image.data.reshape((image.height, image.width, 3)), cv2.COLOR_RGB2BGR
+        )
     if isNormal:
         image_array = image.data.reshape((image.height, image.width, 3))
         normalized_image = cv2.normalize(image_array, None, 0, 255, cv2.NORM_MINMAX)
@@ -70,6 +75,13 @@ class TextureImage:
         logger.info(f"Components per pixel:{self.image.num_components_per_pixel}")
         logger.info(f"Min:{self.image.data.min()}")
         logger.info(f"Max:{self.image.data.max()}")
+
+    def save(self, output_dir: Path = None):
+        if not output_dir:
+            example_root_dir = Path(__file__).parent.parent
+            output_dir: Path = example_root_dir / "Output"
+            output_dir.mkdir(exist_ok=True)
+        cv2.imwrite(f"{Path(output_dir, self.name)}.png", self.processed_image)
 
 
 class RealTimePCLRenderer:
@@ -107,7 +119,9 @@ def pcl_offline_render(pcl, filename: str, params=OfflineRenderParams()):
         filename (str): The output image filename.
         params (OfflineRenderParams, optional): Rendering parameters. Defaults to OfflineRenderParams().
     """
-    renderer = o3d.visualization.rendering.OffscreenRenderer(params.width, params.height)
+    renderer = o3d.visualization.rendering.OffscreenRenderer(
+        params.width, params.height
+    )
     renderer.scene.set_background(params.background_color)
 
     mat = o3d.visualization.rendering.MaterialRecord()

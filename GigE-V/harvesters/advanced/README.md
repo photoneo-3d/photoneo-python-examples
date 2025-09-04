@@ -32,6 +32,8 @@ This example expects the [Balluf ImpactAcquire GenTL producer](http://static.mat
   - Example for capturing two images—one with the original resolution and another with a predefined region of interest (ROI) on a color texture.
 - [ptp_timestamp.py](ptp_timestamp.py):  
   - Example for triggering two devices simultaneously and printing the PTP status and timestamp. Devices must be on the same network.
+- [feature_presenter.py](feature_presenter.py):  
+  - Example to show small features and it's effect on textures, like HDR, ISO, ProjectionOffset etc.
 
 ## Run examples
 

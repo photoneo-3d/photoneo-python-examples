@@ -1,10 +1,11 @@
 import logging
-import os
 import platform
+import re
 import sys
 import time
 from enum import Enum, auto
 from functools import wraps
+
 from genicam.genapi import NodeMap
 from harvesters.core import ImageAcquirer
 from packaging import version
@@ -30,7 +31,9 @@ def measure_time(func):
         result = func(*args, **kwargs)
         end_time = time.time()
         execution_time_ms = (end_time - start_time) * 1000
-        logger.debug(f"Execution time of {func.__name__}: {execution_time_ms:.2f} milliseconds")
+        logger.debug(
+            f"Execution time of {func.__name__}: {execution_time_ms:.2f} milliseconds"
+        )
         return result
 
     return wrapper
@@ -53,11 +56,17 @@ def data_stream_reset(ia: ImageAcquirer):
     ia._setup_data_streams(file_dict=ia._file_dict)
 
 
+def translate_version(raw: str) -> str:
+    match = re.match(r"^\d+\.\d+\.\d+", raw)
+    return match.group(0) if match else raw
+
+
 def version_check(features: NodeMap, minimal_fw_version: str):
-    fw: str = features.DeviceFirmwareVersion.value
+    fw: str = translate_version(features.DeviceFirmwareVersion.value)
     if version.parse(fw) < version.parse(minimal_fw_version):
         logger.warning(f"Minimal FW requirement not met: {fw} < {minimal_fw_version}")
         return
+
 
 class OSType(Enum):
     WINDOWS = auto()
@@ -76,3 +85,38 @@ class OSType(Enum):
             return OSType.MACOS
         else:
             return OSType.UNKNOWN
+
+
+class DeviceType(Enum):
+    MOTIONCAM_3D_COLOR = auto()
+    MOTION_CAM_3D = auto()
+    PHOXI_3D_SCANNER = auto()
+    ALPHA_SCANNER = auto()
+    PHOXI_SCANNER_GEN3 = auto()
+    UNKNOWN = auto()
+
+    @staticmethod
+    def all():
+        return [
+            DeviceType.MOTION_CAM_3D,
+            DeviceType.MOTIONCAM_3D_COLOR,
+            DeviceType.PHOXI_3D_SCANNER,
+            DeviceType.ALPHA_SCANNER,
+            DeviceType.PHOXI_SCANNER_GEN3,
+        ]
+
+
+def detect_device_type(features) -> DeviceType:
+    try:
+        if features.IsMotionCam3DColor_Val.value:
+            return DeviceType.MOTIONCAM_3D_COLOR
+        if features.IsMotionCam3D_Val.value:
+            return DeviceType.MOTION_CAM_3D
+        if features.IsPhoXi3DScannerGen3_Val.value:
+            return DeviceType.PHOXI_SCANNER_GEN3
+        if features.IsAlphaScanner_Val.value:
+            return DeviceType.ALPHA_SCANNER
+        if features.IsPhoXi3DScanner_Val.value:
+            return DeviceType.PHOXI_3D_SCANNER
+    except Exception:
+        return DeviceType.UNKNOWN

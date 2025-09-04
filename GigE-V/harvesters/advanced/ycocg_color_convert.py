@@ -81,7 +81,7 @@ def main(device_sn: str):
             features: NodeMap = ia.remote_device.node_map
             logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
 
-            if not features.IsMotionCam3DColor_Val.value:
+            if not (features.IsMotionCam3D_Val.value or features.IsPhoXi3DScannerGen3_Val):
                 logger.warning("WARNING: This example is not supported on the current device type.")
                 return
 

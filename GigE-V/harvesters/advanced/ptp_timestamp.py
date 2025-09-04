@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
+import logging
 import sys
 import threading
+import time
 from datetime import datetime, timezone
 from enum import Enum
+from io import StringIO
 from pathlib import Path
 
 from harvesters.core import Harvester
 
 from photoneo_genicam.default_gentl_producer import producer_path
-from photoneo_genicam.utils import (data_stream_reset, setup_logger,
-                                    version_check)
+from photoneo_genicam.utils import data_stream_reset, version_check
+
+SCAN_COUNT = 5
 
 
 class PtpStatus(Enum):
@@ -29,13 +33,51 @@ def to_datetime(timestamp: int) -> datetime:
     return datetime.fromtimestamp(ptp_timestamp_sec, tz=timezone.utc)
 
 
-def connect_device(h, serial_number):
-    logger = setup_logger(name=serial_number)
+def decimal_to_ptp_identity(decimal_id: int) -> str:
+    hex_id = f"{decimal_id:016x}"
+    return f"{hex_id[:6]}.fffe.{hex_id[6:]}"
 
-    logger.info(f"Connecting to: {serial_number}")
+
+class BufferedLogger:
+    _buffers = {}
+    _loggers = {}
+
+    def __init__(self, name):
+        if name not in self._loggers:
+            stream = StringIO()
+            logger = logging.getLogger(name)
+            logger.setLevel(logging.INFO)
+
+            handler = logging.StreamHandler(stream)
+            handler.setFormatter(logging.Formatter("[%(name)s] %(message)s"))
+            logger.addHandler(handler)
+            logger.propagate = False
+
+            self._loggers[name] = logger
+            self._buffers[name] = stream
+
+        self.name = name
+        self.logger = self._loggers[name]
+        self.buffer = self._buffers[name]
+
+    def log(self, msg):
+        self.logger.info(msg)
+
+    def print(self):
+        print(self.buffer.getvalue(), end="")
+
+    @classmethod
+    def print_all(cls):
+        for name, buffer in cls._buffers.items():
+            print(buffer.getvalue(), end="")
+        print("-" * 20)
+
+
+def connect_device(h, serial_number):
+    logger = BufferedLogger(serial_number)
+
     with h.create({"serial_number": serial_number}) as ia:
         features = ia.remote_device.node_map
-        logger.info(f"Device Firmware version: {features.DeviceFirmwareVersion.value}")
         version_check(features, "1.14.0-a")
 
         features.UserSetSelector.value = "Default"
@@ -45,21 +87,26 @@ def connect_device(h, serial_number):
         features.TriggerMode.value = "On"
         features.TriggerSource.value = "Software"
 
+        old_laser_power = features.LaserPower.value
+        features.LaserPower.value = 1
+
         features.PtpEnable.value = True
         features.TimestampLatch.execute()
+        features.PtpDataSetLatch.execute()
 
-        logger.info(f"PTP State: {PtpStatus(features.PtpStatus.value)}")
-        logger.info(f"GrandMaster ID: {features.PtpGrandmasterClockID.value}")
-        logger.info(f"Latched timestamp: {features.TimestampLatchValue.value}")
-        logger.info(f"Datetime: {to_datetime(features.TimestampLatchValue.value)}")
-
+        ia.data_streams[0].node_map.mvResendActive.value = True
         data_stream_reset(ia)
         ia.start()
-        features.TriggerSoftware.execute()
-        with ia.fetch(timeout=10) as buffer:
-            logger.info(f"Frame timestamp: {buffer.timestamp}")
-            logger.info(f"Frame timestamp as datetime: {to_datetime(buffer.timestamp_ns)}")
-        ia.stop()
+        for i in range(SCAN_COUNT):
+            features.TriggerSoftware.execute()
+            with ia.fetch(timeout=10) as buffer:
+                logger.log(
+                    f"Frame start acquisition time is {to_datetime(buffer.timestamp_ns)}, "
+                    f"PTP port state is {PtpStatus(features.PtpStatus.value)}, "
+                    f"PTP grandmaster identity is {decimal_to_ptp_identity(features.PtpGrandmasterClockID.value)}"
+                )
+        time.sleep(1)
+        features.LaserPower.value = old_laser_power
 
 
 def main(device1_sn: str, device2_sn: str):
@@ -67,14 +114,12 @@ def main(device1_sn: str, device2_sn: str):
         h.add_file(str(producer_path), check_existence=True, check_validity=True)
         h.update()
 
-        thread1 = threading.Thread(target=connect_device, args=(h, device1_sn))
-        thread2 = threading.Thread(target=connect_device, args=(h, device2_sn))
+        print(f"Collecting {SCAN_COUNT} frames from connected devices")
+        connect_device(h, device1_sn)
+        time.sleep(2)
+        connect_device(h, device2_sn)
 
-        thread1.start()
-        thread2.start()
-
-        thread1.join()
-        thread2.join()
+        BufferedLogger.print_all()
 
 
 if __name__ == "__main__":
@@ -83,6 +128,8 @@ if __name__ == "__main__":
         device2_id = sys.argv[2]
         main(device1_id, device2_id)
     except IndexError:
-        print("Error: no device given, please run it with the device serial number as argument:")
+        print(
+            "Error: no device given, please run it with the device serial number as argument:"
+        )
         print(f"{Path(__file__).name} <device1 serial> <device2 serial>")
         sys.exit(1)
