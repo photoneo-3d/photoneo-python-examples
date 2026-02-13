@@ -100,7 +100,7 @@ for a way on how this can be used to identify the parts.)
 
 The `Intensity` component contains the texture image depending on the
 `TextureSource` or `CameraTextureSource` setting. The pixel format is `Mono10`
-or `Mono12` for monochromatic textures (`Laser` or `Led`), depending on the
+or `Mono12` for monochromatic textures (`Laser` or `LED`), depending on the
 device, or one of `RGB8` or `Mono16` for color textures.
 
 #### Color texture
