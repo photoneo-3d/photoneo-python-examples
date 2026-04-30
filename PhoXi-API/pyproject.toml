@@ -1,0 +1,40 @@
+[project]
+name = "phoxi-api-examples"
+version = "1.0.0"
+requires-python = ">=3.10"
+dependencies = [
+    "open3d>=0.19.0",
+    "phoxi-api>=1.0.0",
+]
+authors = [
+    {name = "Ján Packo"},
+    {name = "Ivan Varga"},
+    {name = "Peter Kováč"},
+]
+maintainers = [
+    {name = "Ján Packo"},
+    {name = "Ivan Varga"},
+    {name = "Peter Kováč"},
+]
+description = "Examples for PhoXi API python wrapper"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE.txt"]
+keywords = [
+    "3D Camera",
+    "3D Scanner",
+    "Computer Vision",
+    "Image Processing",
+    "PhoXi Control",
+    "PhoXi",
+]
+
+[project.urls]
+homepage = "https://www.photoneo.com"
+documentation = "https://www.photoneo.com/downloads/phoxi-control"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.2",
+    "ty>=0.0.1a25",
+]

@@ -1,0 +1,37 @@
+extend-exclude = [
+]
+
+line-length = 100
+
+[format]
+line-ending = "lf"
+
+[lint]
+preview = true
+extend-select = [
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "C4",   # flake8-comprehensions
+    "EM",   # flake8-errmsg
+    "ISC",  # flake8-implicit-str-concat
+    "LOG",  # flake8-logging
+    "G",    # flake8-logging-format
+    "PIE",  # flake8-pie
+    "Q",    # flake8-quotes
+    "TID",  # flake8-tidy-imports
+    "FLY",  # flynt
+    "I",    # isort
+    "PD",   # pandas-vet
+    "PERF", # perflint
+    "E",    # pycodestyle/error
+    "W",    # pycodestyle/warning
+    "F",    # pyflakes
+    "PGH",  # pygrep-hooks
+    "PLE",  # pylint/error
+    "UP",   # pyupgrade
+]
+
+[lint.isort]
+known-first-party = ["examples"]
+combine-as-imports = true
+split-on-trailing-comma = false
