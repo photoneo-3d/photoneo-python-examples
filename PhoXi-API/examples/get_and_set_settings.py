@@ -5,14 +5,14 @@ import sys
 from phoxi_api import PhoXiControl, PhoXiError
 
 if __name__ == "__main__":
-    arg_parser = argparse.ArgumentParser("get_and_set_settings")
+    arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--device_id", type=str, help="Device ID", required=True)
     args = arg_parser.parse_args()
 
     phoxi_control = PhoXiControl()
     if not phoxi_control.is_phoxicontrol_running():
         print("PhoXi Control is not running. Please start PhoXi Control and try again.")
-        exit(1)
+        sys.exit(1)
 
     with phoxi_control.connect(args.device_id) as device:
         # By default, device is NOT logged out from PhoXi Control and acquisition is stopped when
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         print("Connected device:")
         pprint.pp(device.info())
 
-        print("")
+        print()
 
         # Get settings handle
         settings_handle = device.settings()
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         settings_handle.CapturingSettings.LaserPower.value = 1024
         print(f"LaserPower - after change: {settings_handle.CapturingSettings.LaserPower.value}")
 
-        print("")
+        print()
 
         # Check setting availability
         print(
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         print(f"FooBar is {'' if settings_handle.FooBar.can_get() else 'not'} gettable")
         print(f"FooBar is {'' if settings_handle.FooBar.can_set() else 'not'} settable")
 
-        print("")
+        print()
 
         # Reading or setting not available settings via value attribute raises an exception
         try:
@@ -77,29 +77,30 @@ if __name__ == "__main__":
         print(f"FooBar set {'successful' if settings_handle.FooBar.set(2048) else 'failed'}")
 
         # Settings can have limits applied to them, use min() and max() to check these limits.
-        # Values outside of this range will be clamped to this range
+        # Values outside of this range raise a PhoXiError exception
         print(f"LaserPower min: {settings_handle.CapturingSettings.LaserPower.min()}")
         print(f"LaserPower max: {settings_handle.CapturingSettings.LaserPower.max()}")
 
         # Some settings can accept only selected values, use enum() to obtain list of values
-        print(f"Available ISOs: {settings_handle.CapturingSettings.ISO.enum()}")
+        available_iso = settings_handle.CapturingSettings.ISO.enum()
+        print(f"Available ISOs: {available_iso}")
 
         # Obtaining string representation of setting type
         print(f"LaserPower is of type: {settings_handle.CapturingSettings.LaserPower.type()}")
         print(f"ISO is of type: {settings_handle.CapturingSettings.ISO.type()}")
 
-        print("")
+        print()
 
         # Read of whole group of settings
         capturing_settings = settings_handle.CapturingSettings.value
         print("Capturing settings:")
         pprint.pprint(capturing_settings)
 
-        print("")
+        print()
 
         # Change some values by setting dictionary of settings
         settings_handle.value = {
-            "CapturingSettings/ISO": "100",
+            "CapturingSettings/ISO": available_iso[0],
             "CapturingSettings/LEDPower": 100,
             "CapturingSettings/LaserPower": 100,
         }
@@ -108,7 +109,7 @@ if __name__ == "__main__":
 
         # Change some values by setting sub-dictionary of settings
         settings_handle.CapturingSettings.value = {
-            "ISO": "200",
+            "ISO": available_iso[1],
             "LEDPower": 200,
             "LaserPower": 200,
         }
@@ -118,7 +119,7 @@ if __name__ == "__main__":
         # Unavailable setting in dictionary raises an exception
         try:
             settings_handle.value = {
-                "CapturingSettings/ISO": "100",
+                "CapturingSettings/ISO": available_iso[0],
                 "Foo/Bar": "Baz",
             }  # <-- Unavailable
         except PhoXiError as e:
@@ -127,11 +128,11 @@ if __name__ == "__main__":
         # set() can be also used to set dictionary of settings.
         # Unavailable setting will be printed in warning and result will be False
         set_dict_result = settings_handle.set(
-            {"CapturingSettings/ISO": "100", "Foo/Bar": "Baz"}
+            {"CapturingSettings/ISO": available_iso[0], "Foo/Bar": "Baz"}
         )  # <-- Unavailable
         print(f"Setting unavailable settings via .set() result: {set_dict_result}")
 
-        print("")
+        print()
 
         # Read of list of settings at once
         settings, errors = device.get_settings(
@@ -152,23 +153,23 @@ if __name__ == "__main__":
         print(f"LEDPower: {settings['CapturingSettings/LEDPower']}")
         print(f"LaserPower: {settings['CapturingSettings/LaserPower']}")
 
-        print("")
+        print()
 
         # Set multiple settings at once by path
         errors = device.set_settings(
             {
-                "CapturingSettings/ISO": "300",
-                "CapturingSettings/LEDPower": 1,
-                "CapturingSettings/LaserPower": 1,
+                "CapturingSettings/ISO": available_iso[0],
+                "CapturingSettings/LEDPower": 100,
+                "CapturingSettings/LaserPower": 100,
                 "CapturingSettings/FooBar": "Baz",  # <- Unavailable will be reported in 'errors'
             }
         )
         print("Errors which occurred during settings set:")
         pprint.pprint(errors)
 
-        print("")
+        print()
         print("Direct access:")
-        print("")
+        print()
 
         # Access settings with PhoXi Control GUI paths
         # Same as above but spaces in setting paths are replaced by double underscore "__"
@@ -201,7 +202,7 @@ if __name__ == "__main__":
         except PhoXiError as e:
             print(f"Exception: {e}")
 
-        print("")
+        print()
 
         # When using string paths no space replacement is necessary
         # Read of list of settings at once
@@ -224,14 +225,14 @@ if __name__ == "__main__":
         print(f"LED Power: {direct_settings['General Settings/LED Power']}")
         print(f"Laser Power: {direct_settings['General Settings/Laser Power']}")
 
-        print("")
+        print()
 
         # Set multiple settings at once by path
         direct_errors = device.set_settings(
             {
-                "General Settings/ISO": "300",
-                "General Settings/LED Power": 1,
-                "General Settings/Laser Power": 1,
+                "General Settings/ISO": available_iso[0],
+                "General Settings/LED Power": 100,
+                "General Settings/Laser Power": 100,
                 "General Settings/Foo Bar": "Baz",  # <- Unavailable will be reported
             },
             access_type="direct",
@@ -239,4 +240,4 @@ if __name__ == "__main__":
         print("Errors which occurred during settings set:")
         pprint.pprint(direct_errors)
 
-        print("")
+        print()

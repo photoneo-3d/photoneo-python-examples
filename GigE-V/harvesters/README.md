@@ -1,22 +1,26 @@
-# Harvester examples
+# Harvesters examples
 
 We provide 2 sets of examples to cover specific use cases.
 
 ## Basic examples
-The `basic` folder contains examples that show simple usage of the harvesters API with Photoneo devices without any additional dependencies.
+
+The [basic](basic/README.md) folder contains examples that show simple usage of the harvesters API with Photoneo devices without any additional dependencies.
 
 ## Advanced examples
-The `advanced` folder contains more elaborate examples with visualization.
+
+The [advanced](advanced/README.md) folder contains more elaborate examples with visualization.
 
 ## Python requirements
-Create a virtual environment and install the dependencies:
+
+Create a virtual environment and install the dependencies for the set of examples you want to run:
 
 ```
 python3.11 -m venv .venv
-source .venv/bin/activate # on Linux
-# On windows: source .venv/Scripts/activate
+source .venv/bin/activate        # Linux / macOS / Git Bash on Windows
+.venv\Scripts\activate           # Windows PowerShell or CMD
 python3 -m pip install --upgrade pip
-pip install -r ./basic/requirements.txt # or folder advanced
+pip install -r ./basic/requirements.txt    # for basic examples
+# pip install -r ./advanced/requirements.txt  # for advanced examples
 ```
 
 ## Installing a GenTL Producer
@@ -54,5 +58,5 @@ This is a specific setting for `mvGenTLProducer` and may change in the future.
 3. The installer sets the `GENICAM_GENTL64_PATH` environment variable to `/opt/mvIMPACT_Acquire/lib/x86_64` by default.
 4. Make sure the `libmvGenTLProducer.so` file is accessible, as it is essential for proper functioning.
 
-All the examples were tested and work with the `MATRIX VISION` producer. 
-To use a different producer, change the `GenTL_file` variable in `common.py`.
+All the examples were tested and work with the `MATRIX VISION` producer.
+To use a different producer, update the producer path in `basic/gentl_producer_loader.py` or `advanced/photoneo_genicam/default_gentl_producer.py`.

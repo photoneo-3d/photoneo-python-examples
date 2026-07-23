@@ -1,0 +1,165 @@
+# ============================================================================
+#  Photoneo Maintenance Tool - Robot Client (simplified line protocol)
+#  Runs on a Universal Robots controller as the TCP client of robot_controlled_server.py.
+#  See README.md in this folder for the command protocol and setup steps.
+# ============================================================================
+
+DEVICE_SN = "PHA-125"
+SERVER_IP   = "192.168.1.1"
+SERVER_PORT = 2222
+MOVE_SPEED  = 0.5
+MOVE_ACCEL = 0.5
+
+
+global connected = False
+
+# ----------------------------------------------------------------------------
+#  Socket helpers
+# ----------------------------------------------------------------------------
+def connect_to_server():
+    socket_close("maintenance")
+    global connected = socket_open(SERVER_IP, SERVER_PORT, "maintenance")
+    if not connected:
+        textmsg("ERROR: Could not connect to server")
+        halt
+    else:
+        textmsg("Connected to server")
+    end
+end
+
+# Send a command
+def send_command(cmd):
+    socket_send_line(cmd, "maintenance")
+    textmsg("Sent: ", cmd)
+end
+
+# Read one line response (returns empty string on timeout)
+def read_response():
+    resp = socket_read_line("maintenance", timeout=50) # Intentionally long timeout - ADJUST_POWER command can take a long time
+    if resp == "":
+        textmsg("Timeout waiting for response")
+    end
+    return resp
+end
+
+# Check if response starts with "OK"
+def is_ok(resp):
+    if resp == "":
+        return False
+    end
+    return str_find(resp, "OK") == 0
+end
+
+# Extract score from TRIGGER or ANALYZE
+def extract_score(resp):
+    if not is_ok(resp):
+        return -1.0
+    end
+    space_pos = str_find(resp, ": ")
+    if space_pos == -1:
+        return -1.0
+    end
+    score_str = str_sub(resp, space_pos + 1)
+    return to_num(score_str)
+end
+
+# ----------------------------------------------------------------------------
+#  Main program - waypoints p1..p9
+# ----------------------------------------------------------------------------
+def main():
+    connect_to_server()
+
+    # 1. Start calibration
+    send_command(str_cat("START_CALIBRATION ", DEVICE_SN))
+    resp = read_response()
+    if not is_ok(resp):
+        textmsg("Start calibration failed: ", resp)
+		textmsg("Program halted due to error")
+        halt
+    end
+
+    # 2. Adjust power
+    send_command("ADJUST_POWER")
+    resp = read_response()
+    if not is_ok(resp):
+        textmsg("Adjust power failed: ", resp)
+		textmsg("Program halted due to error")
+        halt
+    end
+
+    # 3. Move through waypoints and trigger
+	i = 1
+    while i < 10:
+        if i == 1:
+            movel(p1.p, a=MOVE_ACCEL, v=MOVE_SPEED, t=0, r=0)
+        elif i == 2:
+            movel(p2.p, a=MOVE_ACCEL, v=MOVE_SPEED, t=0, r=0)
+        elif i == 3:
+            movel(p3.p, a=MOVE_ACCEL, v=MOVE_SPEED, t=0, r=0)
+        elif i == 4:
+            movel(p4.p, a=MOVE_ACCEL, v=MOVE_SPEED, t=0, r=0)
+        elif i == 5:
+            movel(p5.p, a=MOVE_ACCEL, v=MOVE_SPEED, t=0, r=0)
+        elif i == 6:
+            movel(p6.p, a=MOVE_ACCEL, v=MOVE_SPEED, t=0, r=0)
+        elif i == 7:
+            movel(p7.p, a=MOVE_ACCEL, v=MOVE_SPEED, t=0, r=0)
+        elif i == 8:
+            movel(p8.p, a=MOVE_ACCEL, v=MOVE_SPEED, t=0, r=0)
+        elif i == 9:
+            movel(p9.p, a=MOVE_ACCEL, v=MOVE_SPEED, t=0, r=0)
+        end
+
+        send_command("TRIGGER")
+        resp = read_response()
+        if not is_ok(resp):
+			textmsg("Trigger failed, trying again...")
+			send_command("TRIGGER")
+        	resp = read_response()
+			if not is_ok(resp):
+            	textmsg("Trigger failed at position ", i)
+				textmsg("Program halted due to error")
+				halt
+			else:
+				markers = extract_score(resp)
+        		textmsg("Trigger OK, markers recognized: ", markers)
+			end
+		else:
+		markers = extract_score(resp)
+        textmsg("Trigger OK, markers recognized: ", markers)
+        end
+		i = i + 1
+    end
+
+    # 4. Analyze
+    send_command("ANALYZE")
+    resp = read_response()
+    if is_ok(resp):
+        score = extract_score(resp)
+        textmsg("Analysis OK, score: ", score)
+    else:
+        textmsg("Analysis failed: ", resp)
+		textmsg("Program halted due to error")
+		halt
+    end
+
+    # 5. Patch (optional)
+    send_command("PATCH")
+    resp = read_response()
+    if is_ok(resp):
+        textmsg("Patching succeeded")
+    else:
+        textmsg("Patching failed: ", resp)
+		textmsg("Program halted due to error")
+		halt
+    end
+
+    # 6. Stop calibration
+    send_command("STOP_CALIBRATION")
+    read_response()   # ignore response
+
+    socket_close("maintenance")
+    textmsg("Program finished successfully")
+end
+
+main()

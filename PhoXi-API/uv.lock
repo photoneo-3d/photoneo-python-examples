@@ -1192,21 +1192,21 @@ wheels = [
 
 [[package]]
 name = "phoxi-api"
-version = "1.0.0"
+version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "semver" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d7/1a/ed21508014c81cd3c238975a9d5bc322370e811279a3eb87049168cfa0b3/phoxi_api-1.0.0.tar.gz", hash = "sha256:9e635098b08368cefabbe7bade873b6f5bba30f2375f223b05ea72197ff3eb65", size = 16282, upload-time = "2026-03-26T13:29:23.085Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/08/06/9c453c12c785f4057343db4f090b8de1ec3130118f9878f37c6d985fb3ef/phoxi_api-1.1.0.tar.gz", hash = "sha256:6bcbd2e7b3f7812773983cca55c3d8d8e21f67e35ef237c87fe4caead6293a13", size = 27937, upload-time = "2026-07-07T08:19:55.029Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/c2/9d3697012f7436d5000967185add9c3b758ac7be4116f24a146180e2c8b4/phoxi_api-1.0.0-py3-none-any.whl", hash = "sha256:a0659312a8faedc65715487440d7ba7330457c8b6993596c10523932fd80771c", size = 20108, upload-time = "2026-03-26T13:29:21.672Z" },
+    { url = "https://files.pythonhosted.org/packages/77/70/b0707e9afee1a9ac32c69e969331b9edb2b79c88ea358c12ba4e01fb6e16/phoxi_api-1.1.0-py3-none-any.whl", hash = "sha256:7b1b2991b494d1d7b173cbd9f8823504911b822f7830c3529972c4e460d4455a", size = 33503, upload-time = "2026-07-07T08:19:53.759Z" },
 ]
 
 [[package]]
 name = "phoxi-api-examples"
-version = "1.0.0"
+version = "1.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "open3d" },
@@ -1222,7 +1222,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "open3d", specifier = ">=0.19.0" },
-    { name = "phoxi-api", specifier = ">=0.3.0", index = "https://pypi.org/simple" },
+    { name = "phoxi-api", specifier = ">=1.1.0" },
 ]
 
 [package.metadata.requires-dev]

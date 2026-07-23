@@ -1,17 +1,18 @@
 import argparse
 import pprint
+import sys
 
 from phoxi_api import PhoXiControl, PhoXiDevice
 
 if __name__ == "__main__":
-    arg_parser = argparse.ArgumentParser("get_frame_sw_trigger")
+    arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--device_id", type=str, help="Device ID", required=True)
     args = arg_parser.parse_args()
 
     phoxi_control = PhoXiControl()
     if not phoxi_control.is_phoxicontrol_running():
         print("PhoXi Control is not running. Please start PhoXi Control and try again.")
-        exit(1)
+        sys.exit(1)
 
     with phoxi_control.connect(args.device_id) as device:
         print("Connected device:")
@@ -30,7 +31,7 @@ if __name__ == "__main__":
             pprint.pprint(all_frame_settings)
 
             # Disable all frame matrices
-            for key in all_frame_settings.keys():
+            for key in all_frame_settings:
                 all_frame_settings[key] = False
             frame_settings_handle.value = all_frame_settings
             print("Disabled frame settings:")
@@ -52,13 +53,20 @@ if __name__ == "__main__":
         # Restart acquisition
         device.start_acquisition()
 
-        print("")
+        print()
 
         for _ in range(5):
             # Get frame
             frame = device.get_frame()
 
             print(f"Frame ID: {frame.Info['Index']}")
+
+            # Check if grabbing was successful, if False expect error in the messages
+            print(f"Frame successful: {frame.Successful}")
+
+            # Frame can contain messages from the device like, errors, warnings, etc.
+            print("Frame messages:")
+            pprint.pprint(frame.Messages)
 
             # Read frame info
             print("\nInfo:")
@@ -67,8 +75,10 @@ if __name__ == "__main__":
             # Read requested frame matrices
             print("\nPointCloud:")
             pprint.pprint(frame.PointCloud)
+
             print("\nDepthMap:")
             pprint.pprint(frame.DepthMap)
+
             print("\nTexture:")
             pprint.pprint(frame.Texture)
 

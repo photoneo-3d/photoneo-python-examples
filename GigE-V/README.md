@@ -7,6 +7,14 @@ the GigE Vision protocol.
 These examples require PhoXi firmware version 1.13.0.
 ⚠️
 
+## Examples
+
+| Folder | Description |
+|---|---|
+| [harvesters/basic](harvesters/basic/README.md) | Simple acquisition and configuration examples with no visualisation dependencies |
+| [harvesters/advanced](harvesters/advanced/README.md) | Point cloud visualisation, texture display, marker space, PTP, Marker Dot Correction, and more |
+| [utils](utils/README.md) | Standalone GigE Vision network utility for device discovery and IP configuration (no extra dependencies) |
+
 ## GenICam Features
 
 When using a GigE Vision framework, most of the interaction with the device will

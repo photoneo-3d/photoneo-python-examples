@@ -1,19 +1,20 @@
 import argparse
 import pprint
+import sys
 
 import numpy as np
 import open3d as o3d
 from phoxi_api import PhoXiControl, PhoXiDevice
 
 if __name__ == "__main__":
-    arg_parser = argparse.ArgumentParser("get_frame_sw_trigger")
+    arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--device_id", type=str, help="Device ID", required=True)
     args = arg_parser.parse_args()
 
     phoxi_control = PhoXiControl()
     if not phoxi_control.is_phoxicontrol_running():
         print("PhoXi Control is not running. Please start PhoXi Control and try again.")
-        exit(1)
+        sys.exit(1)
 
     with phoxi_control.connect(args.device_id) as device:
         print("Connected device:")
@@ -32,7 +33,7 @@ if __name__ == "__main__":
             pprint.pprint(all_frame_settings)
 
             # Disable all frame matrices
-            for key in all_frame_settings.keys():
+            for key in all_frame_settings:
                 all_frame_settings[key] = False
             frame_settings_handle.value = all_frame_settings
             print("Disabled frame settings:")
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         # Restart acquisition
         device.start_acquisition()
 
-        print("")
+        print()
 
         # Trigger frame
         # wait_accept - Wait for device to acknowledge this call for frame trigger. If False
@@ -67,6 +68,12 @@ if __name__ == "__main__":
         # Get specific frame
         # frame_id - if returned by trigger_frame or -1 to get last available frame
         frame = device.get_frame(frame_id)
+
+        # Check if grabbing was successful, if False expect error in the messages
+        if not frame.Info.Successful:
+            print("Frame grabbing failed! Messages:")
+            pprint.pprint(frame.Info.Messages)
+            sys.exit(1)
 
         # Helper function to convert PhoXiAPI matrices to format expected by Open3D
         def convert_for_o3d(component, normalize: bool = False):
