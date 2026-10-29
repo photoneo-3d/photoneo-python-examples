@@ -12,7 +12,6 @@
 import argparse
 
 import numpy as np
-
 from phoxi_api import PrawReader
 
 
@@ -42,13 +41,13 @@ def _compare_point_cloud(m1: np.ndarray, m2: np.ndarray) -> None:
     dist = np.linalg.norm(m1[valid].astype(float) - m2[valid].astype(float), axis=-1)
 
     print(f"  valid point pairs : {valid.sum()} / {valid.size}")
-    print(f"  distance (mm)")
+    print("  distance (mm)")
     print(f"    mean   : {dist.mean():.4f}")
     print(f"    median : {np.median(dist):.4f}")
     print(f"    max    : {dist.max():.4f}")
     print(f"    p95    : {np.percentile(dist, 95):.4f}")
     print(f"    p99    : {np.percentile(dist, 99):.4f}")
-    print(f"  distribution:")
+    print("  distribution:")
     print(_text_histogram(dist))
 
 

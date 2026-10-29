@@ -70,9 +70,9 @@ if __name__ == "__main__":
         frame = device.get_frame(frame_id)
 
         # Check if grabbing was successful, if False expect error in the messages
-        if not frame.Info.Successful:
+        if not frame.Successful:
             print("Frame grabbing failed! Messages:")
-            pprint.pprint(frame.Info.Messages)
+            pprint.pprint(frame.Messages)
             sys.exit(1)
 
         # Helper function to convert PhoXiAPI matrices to format expected by Open3D

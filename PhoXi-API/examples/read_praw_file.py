@@ -54,9 +54,14 @@ if __name__ == "__main__":
             sys.exit(0)
 
         # read_matrix() returns a numpy array. The dtype reflects the raw sensor data
-        # (e.g. float32 for DepthMap, uint16 for Texture).
+        # (e.g. float32 for DepthMap, uint16 for Texture). It returns None if the matrix
+        # is not present in the file.
         path = matrices[0]
         mat = reader.read_matrix(path)
+        if mat is None:
+            print(f"Matrix '{path}' could not be read.")
+            sys.exit(1)
+
         print(f"\nMatrix '{path}':")
         print(f"  shape : {mat.shape}")
         print(f"  dtype : {mat.dtype}")

@@ -101,7 +101,7 @@ retrieved using the ComponentIDValue feature, i.e.:
 Some frameworks don't expose the component IDs for the received parts. To allow
 identifying the parts in such cases, the parts are always sent in the same
 order of increasing component ID values (see the
-[python harvesters example](https://github.com/photoneo-3d/photoneo-python-examples/blob/main/GigEV/harvesters/advanced/connect_grab_save.py#L63-L66)
+[python harvesters example](https://github.com/photoneo-3d/photoneo-python-examples/blob/main/GigE-V/harvesters/advanced/connect_grab_save.py#L71-L74)
 for a way on how this can be used to identify the parts.)
 
 ### Intensity
